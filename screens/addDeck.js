@@ -2,11 +2,12 @@ import React, { Component } from 'react';
 import {
 	StyleSheet,
 	Text,
-	TouchableOpacity,
-	View,
-	TextInput
+	KeyboardAvoidingView
 } from 'react-native';
 import { addDeck } from '../utils/_DATA';
+import Button from "../components/button";
+import Input from '../components/input';
+import ErrorText from '../components/errorText';
 
 
 class AddDeck extends Component {
@@ -18,9 +19,10 @@ class AddDeck extends Component {
 	createNewDeck = () => {
 		const { deckName } = this.state;
 		if (deckName) {
-			const deck = addDeck(deckName);
-			this.setState({ deckName: '', error: '' });
-			this.props.navigation.navigate('Deck', { deckId: deck.id });
+			addDeck(deckName).then(deck => {
+				this.setState({ deckName: '', error: '' });
+				this.props.navigation.navigate('Deck', { deck });
+			});
 		} else {
 			this.setState({
 				error: 'Oops! Please enter a deck name.'
@@ -36,18 +38,23 @@ class AddDeck extends Component {
 		const { deckName, error } = this.state;
 
 		return (
-			<View>
-				<Text>What is the title of your new deck?</Text>
-				<TextInput
+			<KeyboardAvoidingView style={styles.container} behavior="padding" enabled>
+				<Text style={styles.askText}>What is the title of your new deck?</Text>
+				<Input
 					placeholder="Deck title"
 					value={deckName}
-					onChangeText={ (text) => this.updateDeckName(text) }
+					onChangeText={this.updateDeckName}
+					autoFocus={true}
 				/>
-				<Text>{error}</Text>
-				<TouchableOpacity>
-					<Text onPress={() => this.createNewDeck()}>Create Deck</Text>
-				</TouchableOpacity>
-			</View>
+
+				<ErrorText error={error} />
+
+				<Button
+					onPress={this.createNewDeck}
+					text="Create Deck"
+					btnType="primary"
+				/>
+			</KeyboardAvoidingView>
 		)
 	}
 }
@@ -55,5 +62,18 @@ class AddDeck extends Component {
 AddDeck.navigationOptions = {
   title: 'Add Deck',
 };
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		padding: 20,
+		alignItems: 'center',
+		paddingTop: '20%'
+	},
+	askText: {
+		fontSize: 16,
+		marginBottom: 30
+	}
+});
 
 export default AddDeck;

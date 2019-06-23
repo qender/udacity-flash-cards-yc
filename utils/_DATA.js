@@ -1,3 +1,8 @@
+import { AsyncStorage } from 'react-native';
+import { NOTIFICATION_KEY } from './notifications';
+
+const DECKS_KEY = 'flashcards-yc:decks';
+
 // Seed Data
 let decks = [
 	{
@@ -21,38 +26,71 @@ let decks = [
 
 // Deck APIs
 
-export const getDecks = () => {
+export const setInitialData = () => {
+	AsyncStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+	AsyncStorage.setItem(NOTIFICATION_KEY, JSON.stringify({}));
 	return decks;
 };
 
-export const addDeck = (deckName) => {
-	const deck = {
-		id: Math.max.apply(Math, decks.map(deck => deck.id )) + 1,
-		name: deckName,
-		questions: [],
-		numCorrect: 0
-	};
+export const getDecks = () => {
+	return AsyncStorage.getItem(DECKS_KEY).then(JSON.parse);
+};
 
-	decks = [...decks, deck];
-	return deck;
+const setDecks = (decks) => {
+	AsyncStorage.setItem(DECKS_KEY, JSON.stringify(decks));
+};
+
+export const addDeck = (deckName) => {
+	return getDecks().then(decks => {
+		const deck = {
+			id: Math.max.apply(Math, decks.map(deck => deck.id )) + 1,
+			name: deckName,
+			questions: [],
+			numCorrect: 0
+		};
+
+		const updatedDecks = [...decks, deck];
+		setDecks(updatedDecks);
+
+		return deck;
+	});
 };
 
 export const deleteDeck = (deckId) => {
-	decks = decks.filter(deck => deck.id !== deckId);
+	return getDecks().then(decks => {
+		const updatedDecks = decks.filter(deck => deck.id !== deckId);
+		setDecks(updatedDecks);
+	});
 };
 
 export const addCard = (deckId, newQuestion) => {
-	const deck = decks.find(deck => deck.id === deckId);
-	deck.questions = [
-		...deck.questions,
-		newQuestion
-	];
+	return getDecks().then(decks => {
+		const deck = decks.find(deck => deck.id === deckId);
+		deck.questions = [
+			...deck.questions,
+			newQuestion
+		];
+		setDecks(decks);
+		return deck;
+	});
 };
 
 export const markQuestion = (deckId, isCorrect) => {
-	let deck = decks.find(deck => deck.id === deckId);
-	if (isCorrect) {
-		deck.numCorrect = deck.numCorrect + 1;
-	}
-	return deck;
+	return getDecks().then(decks => {
+		let deck = decks.find(deck => deck.id === deckId);
+		if (isCorrect) {
+			deck.numCorrect = deck.numCorrect + 1;
+		}
+		setDecks(decks);
+		return deck;
+	});
+};
+
+export const resetDeck = (deckId) => {
+	return getDecks().then(decks => {
+		let deck = decks.find(deck => deck.id === deckId);
+		deck.numCorrect = 0;
+		setDecks(decks);
+		return deck;
+	});
 };

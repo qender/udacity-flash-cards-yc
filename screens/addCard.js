@@ -1,12 +1,9 @@
 import React, { Component } from 'react';
-import {
-	StyleSheet,
-	Text,
-	View,
-	TextInput,
-	TouchableOpacity
-} from 'react-native';
+import { StyleSheet, KeyboardAvoidingView } from 'react-native';
 import { addCard } from "../utils/_DATA";
+import Input from '../components/input';
+import Button from '../components/button';
+import ErrorText from "../components/errorText";
 
 
 class AddCard extends Component {
@@ -26,9 +23,10 @@ class AddCard extends Component {
 				answer: answerText
 			};
 
-			addCard(deckId, newQuestion);
-			this.setState({ questionText: '', answerText: '', error: '' });
-			this.props.navigation.navigate('Deck', { deckId });
+			addCard(deckId, newQuestion).then(deck => {
+				this.setState({ questionText: '', answerText: '', error: '' });
+				this.props.navigation.navigate('Deck', { deck });
+			});
 		} else {
 			this.setState({
 				error: 'Oops! Make sure to enter text for both the question and answer.'
@@ -48,22 +46,28 @@ class AddCard extends Component {
 		const { questionText, answerText, error } = this.state;
 
 		return (
-			<View>
-				<TextInput
+			<KeyboardAvoidingView style={styles.container} behavior="padding" enabled>
+				<Input
 					placeholder="Question"
 					value={questionText}
-					onChangeText={(text) => this.updateQuestionText(text)}
+					onChangeText={this.updateQuestionText}
+					autoFocus={true}
 				/>
-				<TextInput
+				<Input
 					placeholder="Answer"
 					value={answerText}
-					onChangeText={(text) => this.updateAnswerText(text)}
+					onChangeText={this.updateAnswerText}
+					autoFocus={false}
 				/>
-				<Text>{error}</Text>
-				<TouchableOpacity onPress={() => this.addQuestionToDeck()}>
-					<Text>Submit</Text>
-				</TouchableOpacity>
-			</View>
+
+				<ErrorText error={error} />
+
+				<Button
+					onPress={this.addQuestionToDeck}
+					text="Submit"
+					btnType="primary"
+				/>
+			</KeyboardAvoidingView>
 		)
 	}
 }
@@ -71,5 +75,14 @@ class AddCard extends Component {
 AddCard.navigationOptions = {
 	title: 'Add Card',
 };
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		padding: 20,
+		alignItems: 'center',
+		paddingTop: '20%'
+	}
+});
 
 export default AddCard;

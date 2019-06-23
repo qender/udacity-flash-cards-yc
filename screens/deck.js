@@ -1,28 +1,24 @@
 import React, { Component } from 'react';
-import {
-	StyleSheet,
-	Text,
-	TouchableOpacity,
-	View,
-} from 'react-native';
-import {deleteDeck, getDecks} from '../utils/_DATA';
+import { StyleSheet, View } from 'react-native';
+import {deleteDeck} from '../utils/_DATA';
+import BasicDeckInfo from "../components/basicDeckInfo";
+import Button from '../components/button';
+import TextButton from '../components/textButton';
 
 
 class Deck extends Component {
 	static navigationOptions = ({ navigation }) => {
-		const deck = getDecks().find(deck => deck.id === navigation.state.params.deckId);
-
 		return {
-		  	title: deck.name
+			title: navigation.state.params.deck.name
 		}
 	};
 
 	navigateToAddCard = () => {
-		this.props.navigation.navigate( 'AddCard', { deckId: this.props.navigation.state.params.deckId } );
+		this.props.navigation.navigate( 'AddCard', { deckId: this.props.navigation.state.params.deck.id } );
 	};
 
 	startQuiz = () => {
-		const deck = this.getDeck();
+		const { deck } = this.props.navigation.state.params;
 		const { questions } = deck;
 		this.props.navigation.navigate(
 			'Quiz',
@@ -33,37 +29,53 @@ class Deck extends Component {
 		);
 	};
 
-	getDeck = () => {
-		const { deckId } = this.props.navigation.state.params;
-		return getDecks().find(deck => deck.id === deckId);
-	};
-
 	deleteDeck = () => {
-		const { deckId } = this.props.navigation.state.params;
-		deleteDeck(deckId);
-		this.props.navigation.navigate('Decks');
+		const { deck } = this.props.navigation.state.params;
+		deleteDeck(deck.id).then(() => {
+			this.props.navigation.navigate('Decks');
+		});
 	};
 
 	render() {
-		const deck = this.getDeck();
+		const { deck } = this.props.navigation.state.params;
 
 		return (
-			<View>
-				<Text>{deck.name}</Text>
-				<Text>{deck.questions.length} Cards</Text>
+			<View style={styles.container}>
+				<BasicDeckInfo deck={deck} />
 
-				<TouchableOpacity onPress={() => this.navigateToAddCard()}>
-					<Text>Add Card</Text>
-				</TouchableOpacity>
+				<View style={styles.buttons}>
+					<Button
+						onPress={this.navigateToAddCard}
+						text="Add Card"
+						btnType="primary"
+					/>
 
-				<TouchableOpacity onPress={() => this.startQuiz()}>
-					<Text>Start Quiz</Text>
-				</TouchableOpacity>
+					<Button
+						onPress={this.startQuiz}
+						text="Start Quiz"
+						btnType="secondary"
+					/>
 
-				<Text onPress={() => this.deleteDeck()}>Delete Deck</Text>
+					<TextButton
+						onPress={this.deleteDeck}
+						text="Delete Deck"
+					/>
+				</View>
 			</View>
 		)
 	}
 }
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		padding: 20,
+		alignItems: 'center',
+		paddingTop: '20%'
+	},
+	buttons: {
+		marginTop: 100
+	}
+});
 
 export default Deck;
